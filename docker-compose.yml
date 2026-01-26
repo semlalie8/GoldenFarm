@@ -1,0 +1,68 @@
+services:
+  # MongoDB Database (Golden Farm Data Core)
+  mongo:
+    image: mongo:latest
+    container_name: golden-farm-db
+    restart: always
+    ports:
+      - "27019:27017" # Exposed to host on 27019 to avoid conflict
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - golden-farm-network
+
+  # Backend Server (Node.js + Agent Swarm)
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: golden-farm-server
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - MONGO_URI=mongodb://mongo:27017/goldenfarm
+      - CLIENT_URL=http://localhost:5173
+      # Host networking logic for Ollama access
+      - OLLAMA_URL=http://host.docker.internal:11434
+      # Auth Secrets (In prod, use Docker Secrets)
+      - JWT_SECRET=c8f590d90b0845d2d6ecc4cdbf764b37e2ba1c09b9817213be7a3d2e056148fedd5367ec0d6dce17e86e1882298bd6f7448c6818ab0b9be8ddf3166e4b2e58aa
+      - JWT_ACCESS_SECRET=2df56e9f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f
+      - JWT_REFRESH_SECRET=a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./server:/app/server
+      - /app/server/node_modules
+    depends_on:
+      - mongo
+    networks:
+      - golden-farm-network
+
+  # Frontend Client (React + Neural Dashboard)
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: golden-farm-client
+    restart: always
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    depends_on:
+      - server
+    networks:
+      - golden-farm-network
+
+networks:
+  golden-farm-network:
+    driver: bridge
+
+volumes:
+  mongo-data:

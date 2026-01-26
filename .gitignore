@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.venv/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env.backup.*
+
+# Build outputs
+dist/
+build/
+.next/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+coverage/
+
+# Misc
+*.zip
+backups/
+Originals/
+
+# Media
+*.mp4
+*.mov
+*.avi
+*.mkv
